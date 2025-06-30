@@ -2,7 +2,46 @@ module "yandex-vpc" {
   source       = "./modules/yandex-vpc"
   env_name     = var.clickhouse[0].env_name
   subnets = [
-    { zone = var.vpc_default_zone[2], cidr = var.vpc_default_cidr[0] },
+    { zone = var.vpc_default_zone[2], cidr = var.vpc_default_cidr[0] }
+  ]
+
+  security_group_ingress = [
+    {
+      protocol       = "TCP"
+      description    = "Allow SSH"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 22
+    },
+    {
+      protocol       = "TCP"
+      description    = "Allow HTTP"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 80
+    },
+    {
+      protocol       = "TCP"
+      description    = "Allow HTTPS"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 443
+    },
+    {
+      protocol       = "TCP"
+      description    = "Clickhouse Native Protocol port"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 9000
+    },
+    {
+      protocol       = "TCP"
+      description    = "Clickhouse HTTP default port"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 8123
+    },
+    {
+      protocol       = "TCP"
+      description    = "Clickhouse HTTP SSL/TLS default port"
+      v4_cidr_blocks = ["0.0.0.0/0"]
+      port           = 8443
+    }
   ]
 }
 

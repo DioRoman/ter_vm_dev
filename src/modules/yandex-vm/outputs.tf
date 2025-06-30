@@ -1,22 +1,3 @@
-# output "external_ip_address" {
-#   value = yandex_compute_instance.vm.*.network_interface.0.nat_ip_address
-# }
-
-# output "internal_ip_address" {
-#   value = yandex_compute_instance.vm.*.network_interface.0.ip_address
-# }
-
-# output "fqdn" {
-#   value = yandex_compute_instance.vm.*.fqdn
-# }
-
-# output "labels" {
-#   value = yandex_compute_instance.vm.*.labels
-# }
-
-# output "network_interface" {
-#   value = yandex_compute_instance.vm.*.network_interface
-# }
 output "instance_ids" {
   description = "Список ID созданных виртуальных машин"
   value       = yandex_compute_instance.vm[*].id
@@ -35,13 +16,6 @@ output "external_ips" {
 output "internal_ips" {
   description = "Список внутренних IP-адресов"
   value       = yandex_compute_instance.vm[*].network_interface.0.ip_address
-}
-
-output "fqdn" {
-  description = "Список FQDN созданных виртуальных машин"
-  value = [for vm in yandex_compute_instance.vm : 
-    try(vm.network_interface[0].dns_record[0].fqdn, null)
-  ]
 }
 
 output "network_interfaces" {

@@ -6,7 +6,7 @@ variable "clickhouse" {
     { 
     env_name          = "production",
     instance_name     = "clickhouse", 
-    instance_count    = 2, 
+    instance_count    = 1, 
     public_ip         = true,
     platform_id       = "standard-v3",
     cores             = 2,
