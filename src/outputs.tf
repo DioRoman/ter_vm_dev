@@ -17,3 +17,15 @@ output "vector_vm_private_ips" {
   description = "Private IP addresses of ClickHouse VMs"
   value       = module.vector-vm.internal_ips
 }
+
+output "ssh_clickhouse" {
+  value = [
+    for ip in module.clickhouse-vm.external_ips : "ssh -l ubuntu ${ip}"
+  ]
+}
+
+output "ssh_vector" {
+  value = [
+    for ip in module.vector-vm.external_ips : "ssh -l ubuntu ${ip}"
+  ]
+}
