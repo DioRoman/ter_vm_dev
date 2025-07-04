@@ -95,6 +95,33 @@ module "vector-vm" {
   }  
 }
 
+module "lighthouse-vm" {
+  source              = "./modules/yandex-vm"
+  vm_name             = var.lighthouse[0].instance_name 
+  vm_count            = var.lighthouse[0].instance_count
+  zone                = var.vpc_default_zone[2]
+  subnet_ids          = module.yandex-vpc.subnet_ids
+  image_id            = data.yandex_compute_image.ubuntu.id
+  platform_id         = var.lighthouse[0].platform_id
+  cores               = var.lighthouse[0].cores
+  memory              = var.lighthouse[0].memory
+  disk_size           = var.lighthouse[0].disk_size 
+  public_ip           = var.lighthouse[0].public_ip
+  security_group_ids  = [module.yandex-vpc.security_group_id]
+  
+  labels = {
+    env  = var.lighthouse[0].env_name
+    role = var.lighthouse[0].role
+  }
+
+  metadata = {
+    user-data = data.template_file.cloudinit.rendered
+    serial-port-enable = local.serial-port-enable
+  }  
+}
+
+
+
 data "template_file" "cloudinit" {
   template = file("./cloud-init.yml")
     vars = {
