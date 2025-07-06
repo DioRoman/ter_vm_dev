@@ -4,43 +4,123 @@ module "yandex-vpc" {
   subnets = [
     { zone = var.vpc_default_zone[2], cidr = var.vpc_default_cidr[0] }
   ]
-
-  security_group_ingress = [
+  security_groups = [
     {
-      protocol       = "TCP"
-      description    = "Allow SSH"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 22
+      name        = "clickhouse"
+      description = "Security group for web servers"
+      ingress_rules = [
+        {
+          protocol    = "TCP"
+          port        = 80
+          description = "HTTP access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol    = "TCP"
+          port        = 443
+          description = "HTTPS access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol    = "TCP"
+          port        = 22
+          description = "SSH access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol       = "TCP"
+          description    = "Clickhouse HTTP default port"
+          cidr_blocks    = ["0.0.0.0/0"]
+          port           = 8123
+        },
+        {
+          protocol       = "TCP"
+          description    = "Clickhouse HTTP SSL/TLS default port"
+          cidr_blocks    = ["0.0.0.0/0"]
+          port           = 8443
+        },
+        {
+          protocol       = "TCP"
+          description    = "Clickhouse Native Protocol port"
+          cidr_blocks    = ["0.0.0.0/0"]
+          port           = 9000
+        }
+      ],
+    egress_rules = [
+        {
+            protocol    = "ANY"
+            description = "Allow all outbound traffic"
+            cidr_blocks = ["0.0.0.0/0"]
+        }
+      ]
     },
     {
-      protocol       = "TCP"
-      description    = "Allow HTTP"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 80
+      name        = "vector"
+      description = "Security group for SSH access"
+      ingress_rules = [
+        {
+          protocol    = "TCP"
+          port        = 80
+          description = "HTTP access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol    = "TCP"
+          port        = 443
+          description = "HTTPS access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol    = "TCP"
+          port        = 22
+          description = "SSH access"
+          cidr_blocks = ["0.0.0.0/0"]
+        }
+      ],
+    egress_rules = [
+      {
+          protocol    = "ANY"
+          description = "Allow all outbound traffic"
+          cidr_blocks = ["0.0.0.0/0"]
+      }
+    ] 
     },
     {
-      protocol       = "TCP"
-      description    = "Allow HTTPS"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 443
-    },
-    {
-      protocol       = "TCP"
-      description    = "Clickhouse Native Protocol port"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 9000
-    },
-    {
-      protocol       = "TCP"
-      description    = "Clickhouse HTTP default port"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 8123
-    },
-    {
-      protocol       = "TCP"
-      description    = "Clickhouse HTTP SSL/TLS default port"
-      v4_cidr_blocks = ["0.0.0.0/0"]
-      port           = 8443
+      name        = "lighthouse"
+      description = "Security group for SSH access"
+      ingress_rules = [
+        {
+          protocol    = "TCP"
+          port        = 80
+          description = "HTTP access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol    = "TCP"
+          port        = 443
+          description = "HTTPS access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol    = "TCP"
+          port        = 22
+          description = "SSH access"
+          cidr_blocks = ["0.0.0.0/0"]
+        },
+        {
+          protocol       = "TCP"
+          description    = "Clickhouse HTTP default port"
+          cidr_blocks    = ["0.0.0.0/0"]
+          port           = 8123
+        }
+      ],
+    egress_rules = [
+        {
+            protocol    = "ANY"
+            description = "Allow all outbound traffic"
+            cidr_blocks = ["0.0.0.0/0"]
+        }
+    ] 
     }
   ]
 }
@@ -57,7 +137,7 @@ module "clickhouse-vm" {
   memory              = var.clickhouse[0].memory
   disk_size           = var.clickhouse[0].disk_size 
   public_ip           = var.clickhouse[0].public_ip
-  security_group_ids  = [module.yandex-vpc.security_group_id]
+  security_group_ids  = [module.yandex-vpc.security_group_ids["clickhouse"]]
   
   labels = {
     env  = var.clickhouse[0].env_name
@@ -82,7 +162,7 @@ module "vector-vm" {
   memory              = var.vector[0].memory
   disk_size           = var.vector[0].disk_size 
   public_ip           = var.vector[0].public_ip
-  security_group_ids  = [module.yandex-vpc.security_group_id]
+  security_group_ids  = [module.yandex-vpc.security_group_ids["vector"]]
   
   labels = {
     env  = var.vector[0].env_name
@@ -107,7 +187,7 @@ module "lighthouse-vm" {
   memory              = var.lighthouse[0].memory
   disk_size           = var.lighthouse[0].disk_size 
   public_ip           = var.lighthouse[0].public_ip
-  security_group_ids  = [module.yandex-vpc.security_group_id]
+  security_group_ids  = [module.yandex-vpc.security_group_ids["lighthouse"]]
   
   labels = {
     env  = var.lighthouse[0].env_name
@@ -119,8 +199,6 @@ module "lighthouse-vm" {
     serial-port-enable = local.serial-port-enable
   }  
 }
-
-
 
 data "template_file" "cloudinit" {
   template = file("./cloud-init.yml")
